@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&C Simplifier</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    color: #222;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: #1a1a2e;
+    color: white;
+    padding: 18px 30px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-icon {
+    width: 42px; height: 42px;
+    background: #e94560;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .header h1 { font-size: 22px; font-weight: bold; }
+  .header p  { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+  .main { max-width: 980px; margin: 28px auto; padding: 0 18px 60px; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .lpill {
+    display: flex; align-items: center; gap: 7px;
+    background: white; border: 1px solid #ddd;
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; font-weight: 600;
+  }
+  .ldot { width: 12px; height: 12px; border-radius: 50%; }
+  .ldot.g { background: #27ae60; }
+  .ldot.y { background: #f39c12; }
+  .ldot.r { background: #e74c3c; }
+
+  /* INPUT CARD */
+  .card {
+    background: white; border: 1px solid #ddd;
+    border-radius: 10px; padding: 20px; margin-bottom: 18px;
+  }
+  .card h2 { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 12px; }
+
+  textarea {
+    width: 100%; min-height: 180px;
+    border: 2px solid #ccc; border-radius: 8px;
+    padding: 12px; font-size: 14px;
+    font-family: Arial, sans-serif; color: #333;
+    resize: vertical; outline: none; line-height: 1.6;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: #1a1a2e; }
+  textarea::placeholder { color: #aaa; }
+
+  .sample-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 10px; align-items: center;
+  }
+  .slabel { font-size: 12px; color: #888; }
+  .schip {
+    background: #f0f4f8; border: 1px solid #ccc;
+    padding: 5px 12px; border-radius: 5px;
+    font-size: 12px; cursor: pointer; color: #444;
+    transition: all 0.15s;
+  }
+  .schip:hover { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+  .btn-go {
+    background: #e94560; color: white; border: none;
+    padding: 11px 28px; border-radius: 7px;
+    font-size: 14px; font-weight: bold;
+    cursor: pointer; transition: background 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-go:hover { background: #c0392b; }
+  .btn-go:disabled { background: #aaa; cursor: not-allowed; }
+  .btn-clr {
+    background: white; color: #555; border: 1px solid #ccc;
+    padding: 11px 20px; border-radius: 7px;
+    font-size: 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-clr:hover { background: #f5f5f5; }
+
+  /* RESULTS */
+  #results { display: none; }
+
+  .verdict {
+    border-left: 5px solid; border-radius: 8px;
+    padding: 13px 18px; margin-bottom: 16px;
+    font-size: 14px; font-weight: 600;
+  }
+  .vd { background:#fdedec; border-color:#e74c3c; color:#c0392b; }
+  .vm { background:#fef9e7; border-color:#f39c12; color:#d68910; }
+  .vs { background:#eafaf1; border-color:#27ae60; color:#1e8449; }
+
+  .stats { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .sbox {
+    flex: 1; min-width: 80px;
+    background: white; border: 1px solid #ddd;
+    border-radius: 8px; padding: 12px 10px; text-align: center;
+  }
+  .snum { font-size: 28px; font-weight: bold; line-height: 1; }
+  .snum.r { color: #e74c3c; }
+  .snum.y { color: #f39c12; }
+  .snum.g { color: #27ae60; }
+  .snum.t { color: #555; }
+  .slbl { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; }
+
+  .sec-title {
+    font-size: 12px; font-weight: bold; color: #666;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 16px 0 9px;
+  }
+
+  /* CLAUSE CARDS */
+  .clause {
+    background: white; border: 1px solid #e0e0e0;
+    border-left: 5px solid; border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 10px;
+    transition: box-shadow 0.18s;
+  }
+  .clause:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .clause.r { border-left-color: #e74c3c; }
+  .clause.y { border-left-color: #f39c12; }
+  .clause.g { border-left-color: #27ae60; }
+
+  .ch { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .cbadge {
+    font-size: 11px; font-weight: bold;
+    padding: 3px 9px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    white-space: nowrap; flex-shrink: 0; margin-top: 1px;
+  }
+  .r .cbadge { background: #fdedec; color: #c0392b; }
+  .y .cbadge { background: #fef9e7; color: #d68910; }
+  .g .cbadge { background: #eafaf1; color: #1e8449; }
+
+  .ctitle { font-size: 14px; font-weight: bold; color: #1a1a2e; }
+
+  .corig {
+    font-size: 12px; color: #888; font-style: italic;
+    background: #f8f8f8; border: 1px solid #eee;
+    border-radius: 5px; padding: 7px 10px;
+    margin-bottom: 8px; line-height: 1.55;
+  }
+  .csimp {
+    font-size: 13px; color: #333;
+    line-height: 1.6; padding: 8px 10px;
+    border-radius: 5px;
+  }
+  .r .csimp { background: #fff6f6; }
+  .y .csimp { background: #fffdf0; }
+  .g .csimp { background: #f2fcf5; }
+
+  .ctag {
+    display: inline-block; font-size: 10px; color: #777;
+    background: #f0f0f0; padding: 2px 8px;
+    border-radius: 3px; margin-top: 7px; font-weight: 600;
+  }
+
+  .loading { text-align: center; padding: 30px; color: #888; font-size: 14px; }
+  .spin {
+    width: 28px; height: 28px;
+    border: 3px solid #eee; border-top-color: #e94560;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .footer { text-align: center; padding: 28px; color: #bbb; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">📋</div>
+  <div>
+    <h1>T&amp;C Simplifier</h1>
+    <p>Paste any Terms &amp; Conditions — get a clear, colour-coded breakdown</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="legend">
+    <div class="lpill"><div class="ldot g"></div> Safe / User-friendly</div>
+    <div class="lpill"><div class="ldot y"></div> Caution / Read carefully</div>
+    <div class="lpill"><div class="ldot r"></div> Risky / Concerning</div>
+  </div>
+
+  <div class="card">
+    <h2>📝 Paste your Terms &amp; Conditions below</h2>
+    <textarea id="tc" placeholder="Paste any T&C text here — numbered lists, paragraphs, full pages. Works with any format!&#10;&#10;Example:&#10;1. By accessing this service you agree to these terms.&#10;2. We may collect your data for functionality purposes.&#10;3. All purchases are non-refundable..."></textarea>
+
+    <div class="sample-row">
+      <span class="slabel">Load sample:</span>
+      <span class="schip" onclick="load('data')">📊 Data &amp; Privacy</span>
+      <span class="schip" onclick="load('billing')">💳 Billing &amp; Refunds</span>
+      <span class="schip" onclick="load('legal')">⚖️ Legal Rights</span>
+      <span class="schip" onclick="load('numbered')">🔢 Numbered List</span>
+      <span class="schip" onclick="load('full')">📄 Full T&amp;C</span>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-go" onclick="go()" id="btn">🔍 Analyse &amp; Simplify</button>
+      <button class="btn-clr" onclick="clr()">✕ Clear</button>
+    </div>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<div class="footer">T&amp;C Simplifier — helping you understand what you agree to</div>
+
+<script>
+// ─── SAMPLE TEXTS ────────────────────────────────────────────────────────────
+const S = {
+  data:`We collect personal information including your name, email, phone number, location data, browsing history, and device identifiers. This information may be shared with third-party advertising partners and data brokers to serve you targeted advertisements. By using this service you consent to data collection and sharing. You may opt out by contacting support within 30 days.`,
+
+  billing:`All purchases made through our platform are final and non-refundable. Users may submit a refund request within 7 days for technical errors, subject to review at our sole discretion. Your subscription automatically renews each billing cycle at the then-current rate. We will notify you 30 days before renewal. You can cancel anytime through account settings.`,
+
+  legal:`By submitting content you grant us a worldwide, royalty-free, perpetual, irrevocable licence to use, reproduce, modify, and distribute your content. You retain ownership but cannot revoke this licence. Disputes must be resolved through binding arbitration. You waive your right to participate in any class action lawsuit. We may terminate your account at any time without notice.`,
+
+  numbered:`1. By accessing or using this application/website, you agree to comply with these Terms and Conditions.
+2. This service is intended for educational and demonstration purposes only.
+3. Users are responsible for maintaining the confidentiality of their account information and activities.
+4. Any misuse, unauthorized access, or illegal activity is strictly prohibited.
+5. The service may collect limited user data solely for functionality and security purposes.
+6. We do not guarantee uninterrupted or error-free operation of the service.
+7. All content, design, and source code are the intellectual property of the developers.
+8. We reserve the right to modify or discontinue the service at any time without prior notice.
+9. Users may not copy, redistribute, or commercially use any part of this service without permission.
+10. By using this service, you agree that we are not liable for any damages or losses incurred.`,
+
+  full:`Welcome to our platform. By creating an account you agree to these Terms and Conditions.
+
+PRIVACY AND DATA: We will never sell your personal information to third parties. Your password is encrypted and stored securely. We collect usage data including pages visited and features used to improve our service. We may share anonymised data with analytics partners. Location tracking is enabled by default but can be turned off in settings.
+
+BILLING: Your subscription renews automatically each month at the then-current rate. We will notify you 14 days before renewal. You can cancel anytime from account settings. Refunds are available within 7 days if a technical error occurred on our side, subject to review and approval at our sole discretion.
+
+CONTENT AND IP: You own all content you upload. By uploading you grant us a worldwide royalty-free perpetual licence to display your content. We may remove content that violates our guidelines without notice.
+
+LEGAL: Disputes must go through binding arbitration. You waive your right to a jury trial. We may update these terms at any time without prior notice. We may terminate your account at any time for any reason. All account data will be permanently deleted with no possibility of recovery.`
+};
+
+function load(k){ document.getElementById('tc').value=S[k]; document.getElementById('results').style.display='none'; }
+function clr(){ document.getElementById('tc').value=''; document.getElementById('results').style.display='none'; }
+
+// ─── RULE ENGINE ─────────────────────────────────────────────────────────────
+// Each rule has: color (r/y/g), title, tag, pattern(s), plain-english info
+// Patterns array — ANY match triggers the rule
+const RULES = [
+  // ════ RED ════
+  { c:'r', tag:'Privacy',   title:'Your Data May Be Sold',
+    pat:[/\bsell\b.{0,50}(data|information|details)/i, /data.{0,30}sold/i],
+    info:'The company is allowed to sell your personal data to outside businesses. Your information becomes a product they profit from.' },
+
+  { c:'r', tag:'Privacy',   title:'Data Shared with Advertisers / 3rd Parties',
+    pat:[/shar.{0,60}(third.party|advertis|data broker)/i, /(advertis|data broker).{0,40}shar/i],
+    info:'Your personal data is passed to advertisers or data brokers. These companies can then target you or resell your information further.' },
+
+  { c:'r', tag:'Privacy',   title:'Location Tracking Active',
+    pat:[/location.{0,40}(collect|track|enabl|default|monitor)/i],
+    info:'The service tracks your physical location. This is highly sensitive data — check if you can disable it in settings.' },
+
+  { c:'r', tag:'Billing',   title:'No Refunds — All Sales Final',
+    pat:[/non.refundable/i, /no refund/i, /all (sales|purchases) are final/i, /purchases are final/i],
+    info:'Once you pay, you cannot get your money back under any circumstance — even if the service does not work as expected.' },
+
+  { c:'r', tag:'Rights',    title:'Company Has Absolute Final Say',
+    pat:[/sole discretion/i, /at our discretion/i],
+    info:'The company can make any decision — about refunds, account access, or content — with no obligation to explain or allow appeal.' },
+
+  { c:'r', tag:'Account',   title:'Account Can Be Deleted Without Warning',
+    pat:[/terminat.{0,60}(without notice|at any time|without reason|for any reason)/i,
+         /suspend.{0,60}(without notice|at any time)/i],
+    info:'They can shut your account down at any moment with zero warning. You could instantly lose all your content, history, and purchases.' },
+
+  { c:'r', tag:'Legal',     title:'You Give Up Your Right to Sue',
+    pat:[/waiv.{0,60}(class action|right to sue|jury trial|legal action|lawsuit)/i,
+         /class action.{0,40}waiv/i],
+    info:'By agreeing, you permanently give up your right to take them to court or join a group lawsuit with other affected users.' },
+
+  { c:'r', tag:'Legal',     title:'Forced Private Arbitration',
+    pat:[/binding arbitration/i, /mandatory arbitration/i],
+    info:'Disputes must go through private arbitration — not a public court. This process often heavily favours companies over individuals.' },
+
+  { c:'r', tag:'IP Rights', title:'Permanent Irrevocable Licence on Your Content',
+    pat:[/irrevocable licen/i, /cannot revoke.{0,30}licen/i],
+    info:'Once you post content, the company can use it forever and you cannot take back that permission — even after deleting your account.' },
+
+  { c:'r', tag:'Terms',     title:'Terms Changed Without Telling You',
+    pat:[/(change|updat|modif).{0,60}(terms|policy).{0,60}without (prior )?notice/i,
+         /without (prior )?notice.{0,60}(change|updat|modif).{0,30}terms/i],
+    info:'The company can silently rewrite the rules at any time. Continuing to use the service means you automatically agree to the new terms.' },
+
+  { c:'r', tag:'Legal',     title:'Not Liable for Damages or Losses',
+    pat:[/not.{0,20}liable.{0,50}(damage|loss|harm|injur)/i,
+         /no liability.{0,40}(damage|loss)/i,
+         /not responsible.{0,30}(damage|loss|harm)/i],
+    info:'The company accepts no legal responsibility if you suffer losses, damages, or harm while using their service.' },
+
+  { c:'r', tag:'Account',   title:'Data Permanently Deleted — No Recovery',
+    pat:[/(data|content|account).{0,50}permanently delet/i,
+         /no (possibility|way) of recovery/i,
+         /cannot be recovered/i],
+    info:'If your account is closed — even forcibly — all your files and data are wiped permanently with absolutely no way to get them back.' },
+
+  { c:'r', tag:'Content',   title:'No Guarantee of Service Working',
+    pat:[/not guarantee.{0,50}(uninterrupted|error.free|continu|availab)/i,
+         /without warranty/i, /as.is/i],
+    info:'The company does not promise the service will work reliably. If it goes down or loses your data, they are not obligated to fix it or compensate you.' },
+
+  { c:'r', tag:'Rights',    title:'Service Can Be Discontinued Without Notice',
+    pat:[/(discontinu|shut down|suspend).{0,50}(service|platform).{0,40}(without notice|at any time)/i,
+         /right to.{0,30}(discontinu|modify|remove).{0,30}service/i],
+    info:'The company can shut down the entire service at any time without telling you in advance — you could lose access suddenly.' },
+
+  { c:'r', tag:'IP Rights', title:'Your Content / IP Belongs to Developers',
+    pat:[/(content|design|source code|intellectual property).{0,50}(property of|owned by|belongs to).{0,30}(developer|company|us|platform)/i,
+         /intellectual property of the developer/i],
+    info:'The company claims ownership over content, design, or code on the platform. This limits your ability to reuse or claim credit for your contributions.' },
+
+  // ════ YELLOW ════
+  { c:'y', tag:'Billing',   title:'Subscription Auto-Renews',
+    pat:[/automatically? renew/i, /auto.renew/i, /will renew/i],
+    info:'Your subscription charges you automatically at the end of each period. You must actively cancel before the deadline or you will be billed again.' },
+
+  { c:'y', tag:'Billing',   title:'Price May Increase at Renewal',
+    pat:[/then.current rate/i, /current rate/i, /pricing may change/i, /rate may change/i],
+    info:'When your subscription renews, the price could be higher than what you originally paid. Always check the current price before renewal date.' },
+
+  { c:'y', tag:'Billing',   title:'Cancellation Has a Specific Deadline',
+    pat:[/cancel.{0,60}(24 hours|48 hours|before the|prior to).{0,30}(renewal|expir|end)/i],
+    info:'You must cancel before a specific cutoff time. Miss that window and you will be automatically charged for another full billing period.' },
+
+  { c:'y', tag:'Billing',   title:'Refunds Are Not Guaranteed',
+    pat:[/subject to (review|approval)/i, /refund.{0,30}(may be|at our)/i],
+    info:'Refund requests are reviewed by the company and can be approved or denied. There is no guaranteed right to a refund — it is up to them.' },
+
+  { c:'y', tag:'Privacy',   title:'Your Usage Data Is Collected',
+    pat:[/(collect|gather|record).{0,60}(usage data|browsing|pages visited|time spent|user data|limited.{0,20}data)/i,
+         /service may collect.{0,40}data/i],
+    info:'The company collects information about how you use their service. This is common but you should know what data is gathered and how it is used.' },
+
+  { c:'y', tag:'Privacy',   title:'Data Shared with Analytics Partners',
+    pat:[/shar.{0,60}(anonymi[sz]ed|aggregated).{0,40}(partner|analytic)/i,
+         /analytic.{0,40}partner/i],
+    info:'Even anonymised data about you is shared with analytics companies. It is not directly identifiable, but your usage patterns are still being shared.' },
+
+  { c:'y', tag:'Terms',     title:'Terms Can Be Updated Anytime',
+    pat:[/(may|can|will|reserve the right).{0,30}(updat|modif|chang).{0,40}(terms|policy|service)/i],
+    info:'The company can revise their rules whenever they want. Check whether they must give you advance notice before changes take effect.' },
+
+  { c:'y', tag:'Legal',     title:'Limited Warranty / No Guarantees',
+    pat:[/limited warranty/i, /limited liability/i, /no guarantee/i, /not guarantee/i],
+    info:'The service is provided without full guarantees. If it malfunctions or causes problems, the company has limited legal obligation to compensate you.' },
+
+  { c:'y', tag:'IP Rights', title:'Very Broad Worldwide Licence on Your Content',
+    pat:[/(worldwide|global|perpetual|royalty.free).{0,50}licen/i],
+    info:'They have a wide licence to use your content globally for an indefinite period. You may still own it, but they have very broad rights to use it.' },
+
+  { c:'y', tag:'Privacy',   title:'Opt-Out Requires Your Action',
+    pat:[/(opt.out|contact.{0,20}support.{0,20}to (opt|cancel|stop))/i],
+    info:'You can stop certain data uses, but you must contact them yourself to do so. Nothing stops automatically — you have to take action.' },
+
+  { c:'y', tag:'Content',   title:'Content Can Be Removed Without Notice',
+    pat:[/remov.{0,40}content.{0,40}(without notice|guideline|violat)/i,
+         /(content|material).{0,40}may be removed/i],
+    info:'The company can delete your content at any time if they decide it breaks their rules — you may not be warned before this happens.' },
+
+  { c:'y', tag:'Account',   title:'You Are Responsible for Account Security',
+    pat:[/(responsible|liable).{0,50}(confidentiality|account.{0,20}(security|information|activit))/i,
+         /maintain.{0,30}confidentiality/i],
+    info:'You are fully responsible for keeping your account secure. If someone else accesses your account, the company may hold you accountable.' },
+
+  { c:'y', tag:'Usage',     title:'Prohibited Activities Apply',
+    pat:[/(misuse|unauthorized access|illegal activity).{0,40}(strictly prohibit|not allowed|forbidden)/i,
+         /strictly prohibited/i],
+    info:'There is a list of banned activities. Breaking these rules — even accidentally — could get your account suspended or terminated.' },
+
+  { c:'y', tag:'IP Rights', title:'Restrictions on Copying / Redistributing',
+    pat:[/(may not|cannot|do not).{0,40}(copy|redistribute|commercially use|reproduce|reuse)/i,
+         /without (permission|consent|authorisation)/i],
+    info:'You are not allowed to copy or reuse content from the platform without permission. Violation could lead to account termination or legal action.' },
+
+  // ════ GREEN ════
+  { c:'g', tag:'Privacy',   title:'Your Data Will Never Be Sold',
+    pat:[/never sell.{0,60}(your|personal|user).{0,40}(data|information)/i,
+         /will not sell.{0,30}(your|personal).{0,20}(data|information)/i],
+    info:'The company explicitly promises not to sell your personal data to anyone. This is one of the strongest user-friendly commitments a service can make.' },
+
+  { c:'g', tag:'Security',  title:'Your Password / Data Is Encrypted',
+    pat:[/(password|data|information).{0,40}(encrypted|encryption|stored securely|secure storage)/i,
+         /encrypt.{0,30}(password|data|stored)/i],
+    info:'Your sensitive data is protected using encryption. Even if there is a security breach, your information is much harder for attackers to misuse.' },
+
+  { c:'g', tag:'Billing',   title:'You Can Cancel Anytime — No Lock-In',
+    pat:[/cancel anytime/i, /cancel at any time/i, /free to cancel/i],
+    info:'No lock-in period. You can cancel your subscription whenever you choose with no penalties — this is a very user-friendly billing policy.' },
+
+  { c:'g', tag:'Billing',   title:'Advance Notice Before Renewal',
+    pat:[/(notify|reminder|inform|alert).{0,60}(30|14|7).{0,30}days?.{0,30}(before|prior|ahead)/i,
+         /(30|14|7).{0,20}days.{0,30}(before|prior).{0,20}(renewal|billing|charge)/i],
+    info:'They will warn you well before automatically charging you again — giving you enough time to cancel if you no longer want the service.' },
+
+  { c:'g', tag:'IP Rights', title:'You Keep Ownership of Your Content',
+    pat:[/(you (own|retain)|retain ownership|your ownership).{0,50}(content|material|work|upload)/i,
+         /you own all content/i],
+    info:'Everything you create or upload belongs to you. The company cannot claim your content as their own intellectual property.' },
+
+  { c:'g', tag:'Privacy',   title:'Location Tracking Can Be Turned Off',
+    pat:[/location.{0,60}(turn.{0,10}off|disabled?|opt.out|settings|can be)/i],
+    info:'You have the ability to disable location tracking in settings — giving you direct control over one of your most sensitive data types.' },
+
+  { c:'g', tag:'Usage',     title:'Service for Educational / Legitimate Use',
+    pat:[/(educational|demonstration|learning|informational).{0,40}purpose/i],
+    info:'The service is clearly positioned for legitimate, educational purposes — this is a positive and transparent statement of intent.' },
+];
+
+// ─── ANALYSIS ENGINE ─────────────────────────────────────────────────────────
+
+// Split text into segments — handles numbered lists, paragraphs, sentences
+function getSegments(text) {
+  const segs = [];
+
+  // Split on numbered list items: "1." "2." etc.
+  const numbered = text.split(/(?=\n?\s*\d+[\.\)]\s)/);
+  numbered.forEach(chunk => {
+    chunk = chunk.trim();
+    if (!chunk) return;
+    // Further split long chunks into sentences
+    const sents = chunk
+      .replace(/([.!?])\s+/g, '$1\n')
+      .split('\n')
+      .map(s => s.replace(/^\s*\d+[\.\)]\s*/, '').trim())
+      .filter(s => s.length > 12 && s.split(' ').length >= 3);
+    segs.push(...sents);
+    // Also add the full chunk so multi-sentence patterns work
+    const full = chunk.replace(/^\s*\d+[\.\)]\s*/, '').trim();
+    if (full.length > 20) segs.push(full);
+  });
+
+  // Deduplicate
+  return [...new Set(segs)];
+}
+
+function bestSnippet(text, pats) {
+  for (const p of pats) {
+    const m = p.exec(text);
+    if (m) {
+      const s = Math.max(0, m.index - 30);
+      const e = Math.min(text.length, m.index + m[0].length + 90);
+      let snip = text.substring(s, e).trim().replace(/^\s*\d+[\.\)]\s*/, '');
+      if (s > 0) snip = '...' + snip;
+      if (e < text.length) snip += '...';
+      return snip;
+    }
+  }
+  return text.substring(0, 110).trim() + (text.length > 110 ? '...' : '');
+}
+
+function analyse(raw) {
+  const segs = getSegments(raw);
+  const results = [];
+  const usedTitles = new Set();
+
+  RULES.forEach(rule => {
+    if (usedTitles.has(rule.title)) return;
+
+    // Try each segment
+    let matchedSeg = null;
+    for (const seg of segs) {
+      if (rule.pat.some(p => p.test(seg))) { matchedSeg = seg; break; }
+    }
+
+    // Fallback: scan full raw text
+    if (!matchedSeg && rule.pat.some(p => p.test(raw))) {
+      matchedSeg = bestSnippet(raw, rule.pat);
+    }
+
+    if (matchedSeg) {
+      usedTitles.add(rule.title);
+      // Clean up the original snippet
+      let orig = matchedSeg.replace(/^\s*\d+[\.\)]\s*/, '').trim();
+      if (orig.length > 160) orig = orig.substring(0, 157) + '...';
+      results.push({ c: rule.c, title: rule.title, tag: rule.tag, orig, info: rule.info });
+    }
+  });
+
+  return results;
+}
+
+// ─── UI ──────────────────────────────────────────────────────────────────────
+function go() {
+  const raw = document.getElementById('tc').value.trim();
+  if (!raw) { alert('Please paste some Terms & Conditions text first.'); return; }
+
+  const btn = document.getElementById('btn');
+  btn.disabled = true; btn.innerHTML = '⏳ Analysing...';
+
+  const div = document.getElementById('results');
+  div.style.display = 'block';
+  div.innerHTML = '<div class="loading"><div class="spin"></div>Reading the fine print...</div>';
+
+  setTimeout(() => {
+    const items = analyse(raw);
+    render(items);
+    btn.disabled = false; btn.innerHTML = '🔍 Analyse &amp; Simplify';
+  }, 600);
+}
+
+function render(items) {
+  const div = document.getElementById('results');
+  if (!items.length) {
+    div.innerHTML = '<div class="card" style="text-align:center;padding:30px;color:#888"><div style="font-size:34px;margin-bottom:10px">🤔</div><p>No clauses detected. Try pasting more text.</p></div>';
+    return;
+  }
+
+  const cnt = { r:0, y:0, g:0 };
+  items.forEach(i => cnt[i.c]++);
+
+  let vClass, vText;
+  if      (cnt.r >= 3) { vClass='vd'; vText='🚨 HIGH RISK — Multiple risky clauses found. Read carefully before you agree!'; }
+  else if (cnt.r >= 1) { vClass='vm'; vText='⚠️ MIXED — Some clauses need attention. Pay close attention to the red ones.'; }
+  else if (cnt.y >= 1) { vClass='vm'; vText='⚠️ PROCEED WITH CAUTION — No major red flags, but some clauses are worth reading.'; }
+  else                 { vClass='vs'; vText='✅ LOOKS REASONABLE — No major concerns found. Still good to stay informed!'; }
+
+  const emo = { r:'🚨', y:'⚠️', g:'✅' };
+  const lbl = { r:'RISKY', y:'CAUTION', g:'SAFE' };
+
+  const sorted = [...items].sort((a,b) => ({ r:0, y:1, g:2 }[a.c] - { r:0, y:1, g:2 }[b.c]));
+
+  let html = `
+    <div class="verdict ${vClass}">${vText}</div>
+    <div class="stats">
+      <div class="sbox"><div class="snum r">${cnt.r}</div><div class="slbl">🚨 Risky</div></div>
+      <div class="sbox"><div class="snum y">${cnt.y}</div><div class="slbl">⚠️ Caution</div></div>
+      <div class="sbox"><div class="snum g">${cnt.g}</div><div class="slbl">✅ Safe</div></div>
+      <div class="sbox"><div class="snum t">${items.length}</div><div class="slbl">Total</div></div>
+    </div>`;
+
+  ['r','y','g'].forEach(color => {
+    const grp = sorted.filter(i => i.c === color);
+    if (!grp.length) return;
+    const secLabel = color==='r' ? '🚨 Risky Clauses' : color==='y' ? '⚠️ Read These Carefully' : '✅ User-Friendly Clauses';
+    html += `<div class="sec-title">${secLabel}</div>`;
+    grp.forEach((item, idx) => {
+      html += `
+        <div class="clause ${color}" style="animation:fadeIn 0.3s ${idx*0.06}s ease both">
+          <div class="ch">
+            <span class="cbadge">${emo[color]} ${lbl[color]}</span>
+            <span class="ctitle">${item.title}</span>
+          </div>
+          <div class="corig">"${item.orig}"</div>
+          <div class="csimp">${item.info}</div>
+          <span class="ctag">${item.tag}</span>
+        </div>`;
+    });
+  });
+
+  div.innerHTML = html;
+  div.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+</script>
+</body>
+</html>
